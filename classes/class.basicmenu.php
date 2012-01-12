@@ -5,12 +5,15 @@ class BasicMenu {
 	public $output;
 	private $mainMenuItems;
 	private $currentIdx;
+	private $mmItemCount;
 
 	function __construct($parent='0',&$modx) {
-		$this->modx					= $modx;		
+		$this->modx						= $modx;		
 		$this->currentIdx			= 1; // used by drop down menus
+		$this->currentCtxKey	= $this->modx->context->key;
 		
 	} // end __constrct()
+	
 	
 	private function getMenuItemsFromParent($parent=0) {
 	
@@ -19,7 +22,8 @@ class BasicMenu {
 		$c->where(array('parent'	=> $parent,
 					'hidemenu'	=> 0,
 					'published'	=> 1,
-					'deleted' => 0
+					'deleted' => 0,
+					'context_key' => $this->currentCtxKey
 					));
 	
 		$collection			= $this->modx->getCollection('modResource',$c);						
@@ -34,9 +38,9 @@ class BasicMenu {
 		
 		// init this output
 		$output				= '';
-        
-        // get the count so we know which separator to use
+ 
         $count              = count($mainmenuitems);
+        $this->mmItemCount 	= $count;
         $i = 0;
         
         // collect and process each of the main menu items		
@@ -48,7 +52,6 @@ class BasicMenu {
 			$data['longtitle']	= $mainmenuitem->get('longtitle');
 			$data['id']		      = $mainmenuitem->get('id');
       $data['dropdown']   = $this->getDropdown($data['id']);
-      $data['separator']  = ($i == $count) ? "&nbsp;" : "";
       $data['ddClass']    = ($data['dropdown'] != '') ? 'has_dropdown' : 'no_dropdown';
       $data['lastClass']  = ($i == $count) ? 'last_menu' : '';
 
@@ -81,8 +84,9 @@ class BasicMenu {
 			} // end foreach
 			
 			$data = array();
-			$data['items']   = $items;
-			$data['idx']     = $this->currentIdx;
+			$data['items']   		= $items;
+			$data['idx']     		= $this->currentIdx;
+			$data['lastDDClass']= ($this->currentIdx == $this->mmItemCount) ? 'last-sub-menu' : '';
 			
 			$output          .= $this->modx->getChunk('subMenuTpl',$data);
 
